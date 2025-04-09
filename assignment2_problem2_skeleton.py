@@ -145,10 +145,17 @@ if __name__ == '__main__':
 
     files = [get_file(fn) for fn in get_filenames(path)]
     file_counts = list()
-    for file in files:
-        file_counts.append(count_words_in_file(file))
+
+    with mp.Pool(num_workers) as pool:
+        file_counts = pool.map(count_words_in_file, files)
+        
+    # for file in files:
+    #     file_counts.append(count_words_in_file(file))
 
     global_counts = dict()
+
+    # with mp.Pool(num_workers) as pool:
+    #     counts = pool.map(merge_counts, global_counts)
     for counts in file_counts:
         merge_counts(global_counts,counts)
     
