@@ -100,9 +100,12 @@ def compute_checksum(counts):
     The checksum (int)
     """
     checksum = 0
-    for word in counts:
+    for word, count in counts.items():
+        checksum = checksum + (len(word) * count)
 
-    raise NotImplementedError
+    print(checksum)
+    return checksum
+    """raise NotImplementedError"""
 
 
 if __name__ == '__main__':
@@ -129,7 +132,6 @@ if __name__ == '__main__':
         quit(1)
 
     files = [get_file(fn) for fn in get_filenames(path)]
-
     file_counts = list()
     for file in files:
         file_counts.append(count_words_in_file(file))
@@ -138,3 +140,4 @@ if __name__ == '__main__':
     for counts in file_counts:
         merge_counts(global_counts,counts)
     
+    compute_checksum(global_counts)
