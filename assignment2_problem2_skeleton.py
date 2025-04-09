@@ -70,13 +70,13 @@ def get_top10(counts):
         if len(top10) < 10:
             top10.append((count, word))
         else:
-            min_count = min(top10, key=lambda x: x[0])
+            min_count = min(top10)
             if count > min_count[0]:
                 top10.remove(min_count)
                 top10.append((count, word))
     
     # Sort the top10 list in descending order of counts
-    top10.sort(reverse=True, key=lambda x: x[0])
+    top10.sort(reverse=True)
     
     return top10
 
