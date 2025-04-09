@@ -70,13 +70,13 @@ def get_top10(counts):
         if len(top10) < 10:
             top10.append((count, word))
         else:
-            min_count = min(top10, key=lambda x: x[0])
+            min_count = min(top10)
             if count > min_count[0]:
                 top10.remove(min_count)
                 top10.append((count, word))
     
     # Sort the top10 list in descending order of counts
-    top10.sort(reverse=True, key=lambda x: x[0])
+    top10.sort(reverse=True)
     
     return top10
 
@@ -117,9 +117,7 @@ def compute_checksum(counts):
     for word, count in counts.items():
         checksum = checksum + (len(word) * count)
 
-    print(checksum)
     return checksum
-    """raise NotImplementedError"""
 
 
 if __name__ == '__main__':
@@ -154,5 +152,5 @@ if __name__ == '__main__':
     for counts in file_counts:
         merge_counts(global_counts,counts)
     
-    compute_checksum(global_counts)
+    print(compute_checksum(global_counts))
     print(get_top10(global_counts))
