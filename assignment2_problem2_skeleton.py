@@ -62,9 +62,23 @@ def get_top10(counts):
     - counts, dictionary : a mapping from words (str) to counts (int)
     
     Return value:
-    A list of (count,word) pairs (int,str)
+    A list of (count, word) pairs (int, str)
     """
-    raise NotImplementedError
+    top10 = []
+    
+    for word, count in counts.items():
+        if len(top10) < 10:
+            top10.append((count, word))
+        else:
+            min_count = min(top10, key=lambda x: x[0])
+            if count > min_count[0]:
+                top10.remove(min_count)
+                top10.append((count, word))
+    
+    # Sort the top10 list in descending order of counts
+    top10.sort(reverse=True, key=lambda x: x[0])
+    
+    return top10
 
 
 
@@ -141,3 +155,4 @@ if __name__ == '__main__':
         merge_counts(global_counts,counts)
     
     compute_checksum(global_counts)
+    print(get_top10(global_counts))
