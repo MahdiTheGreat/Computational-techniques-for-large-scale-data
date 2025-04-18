@@ -1,0 +1,8 @@
+Checksum: 11520967 
+Top 10: [(96658, 'the'), (53590, 'of'), (44612, 'and'), (39064, 'to'), (33510, 'a'), (31914, 'in'), (16346, 'that'), (14673, 'was'), (14193, 'is'), (11409, 'for')] 
+Time for get_file: 0.050176143646240234 
+Time for file_counts: 0.38467884063720703 
+Time for global_counts: 0.09721612930297852 
+Time for checksum: 0.01484227180480957 
+Time for top10: 0.09203457832336426 
+Total execution time: 0.6435213088989258
