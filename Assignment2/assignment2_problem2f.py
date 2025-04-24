@@ -39,7 +39,7 @@ def count_words_in_file(filename):
     Whitespace is ignored
 
     Parameters:
-    - file, string : the content of a file
+    - filename, string : the path to a file
 
     Returns: Dictionary that maps words (strings) to counts (ints)
     """
