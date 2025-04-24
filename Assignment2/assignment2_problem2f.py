@@ -33,7 +33,7 @@ def get_file(path):
     with open(path,'r') as f:
         return f.read()
 
-def count_words_in_file(file):
+def count_words_in_file(filename):
     """
     Counts the number of occurrences of words in the file
     Whitespace is ignored
@@ -43,6 +43,7 @@ def count_words_in_file(file):
 
     Returns: Dictionary that maps words (strings) to counts (ints)
     """
+    file = get_file(filename)
     counts = dict()
     for word in file.split():
         if word in counts:
@@ -145,13 +146,17 @@ if __name__ == '__main__':
         quit(1)
     
     sample = time.time()
-    files = [get_file(fn) for fn in get_filenames(path)]
+
+    files = list()
+    for fn in get_filenames(path):
+        files.append(fn)
+
     get_files_time = time.time() - sample
 
     sample = time.time()
     file_counts = list()
-    for file in files:
-        file_counts.append(count_words_in_file(file))
+    with mp.Pool(num_workers) as pool:
+       file_counts = pool.map(count_words_in_file, files)
 
     file_counts_time = time.time() - sample
     global_counts = dict()

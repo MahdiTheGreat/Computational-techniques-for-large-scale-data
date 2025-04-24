@@ -144,9 +144,8 @@ if __name__ == '__main__':
         quit(1)
     
     files = [get_file(fn) for fn in get_filenames(path)]
-    get_files_time = time.time() - sample
+    
     file_counts = list()
-
     for file in files:
         file_counts.append(count_words_in_file(file))
 
