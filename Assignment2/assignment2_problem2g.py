@@ -36,7 +36,7 @@ def get_file(path):
         return f.read()
 
 
-def count_words_in_file(filename_queue,wordcount_queue,batch_size):
+def count_words_in_file(filename_queue, wordcount_queue, batch_size):
     """
     Counts the number of occurrences of words in the file
     Performs counting until a None is encountered in the queue
@@ -51,7 +51,21 @@ the queue, and end of input is indicated with a None
     
     Returns: None
     """
-    raise NotImplementedError
+    counts = dict()
+    files_processed = 0
+    while (files_processed < batch_size):
+        file = get_file(filename_queue.get())
+        if file is not None:
+            for word in file.split():
+                if word in counts:
+                    counts[word] += 1
+                else:
+                    counts[word] = 1
+            files_processed += 1
+        else:
+            break
+    wordcount_queue.put(counts)
+
 
 
 def get_top10(counts):
@@ -65,7 +79,21 @@ def get_top10(counts):
     Return value:
     A list of (count,word) pairs (int,str)
     """
-    raise NotImplementedError
+    top10 = []
+    
+    for word, count in counts.items():
+        if len(top10) < 10:
+            top10.append((count, word))
+        else:
+            min_count = min(top10)
+            if count > min_count[0]:
+                top10.remove(min_count)
+                top10.append((count, word))
+    
+    # Sort the top10 list in descending order of counts
+    top10.sort(reverse=True)
+    
+    return top10
 
 
 def merge_counts(out_queue,wordcount_queue,num_workers):
@@ -81,7 +109,14 @@ Nones to signal end of input from a worker
     
     Return value: None
     """
-    raise NotImplementedError
+    wordcounts = wordcount_queue.get()
+    if wordcounts is not None:
+        for word in wordcounts.items():
+            if word in global_counts:
+                global_counts[word] += wordcounts[word]
+            else:
+                global_counts[word] = wordcounts[word]
+    out_queue.put(global_counts)
 
 
 def compute_checksum(counts):
@@ -95,7 +130,11 @@ def compute_checksum(counts):
     Return value:
     The checksum (int)
     """
-    raise NotImplementedError
+    checksum = 0
+    for word, count in counts.items():
+        checksum = checksum + (len(word) * count)
+
+    return checksum
 
 
 if __name__ == '__main__':
@@ -121,7 +160,27 @@ if __name__ == '__main__':
         quit(1)
     
     # construct workers and queues
+    filename_queue = mp.Queue()
+    wordcount_queue = mp.Queue()
+    global_counts = dict()
+
+    workers = [mp.Process(target = count_words_in_file, args=(filename_queue, wordcount_queue, batch_size)) for _ in range(num_workers)]
+
+    for w in workers:
+        w.start()
     # construct a special merger process
+
     # put filenames into the input queue
-    # workers then put dictionaries for the merger
+    for filename in get_filenames(path):
+        filename_queue.put(filename)
+
+    for _ in range(num_workers):
+        filename_queue.put(None)
+
+
+    # workers then put dictionaries for the merger    
+    for w in workers:
+        w.join()
+
+
     # the merger shall return the checksum and top 10 through the out queue

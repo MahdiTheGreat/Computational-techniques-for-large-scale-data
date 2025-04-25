@@ -1,0 +1,9 @@
+Problem 2E multiprocessing pool 1 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 34.87245178222656 
+Time for file_counts: 840.0267858505249 
+Time for global_counts: 262.01654958724976 
+Time for checksum: 3.425772190093994 
+Time for top10: 11.77998948097229 
+Total execution time: 1152.1255512237549

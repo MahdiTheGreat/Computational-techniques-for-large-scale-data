@@ -1,0 +1,69 @@
+Problem 2F multiprocessing pool 1 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 3.1146962642669678 
+Time for file_counts: 1336.5593807697296 
+Time for global_counts: 183.0827832221985 
+Time for checksum: 2.582200765609741 
+Time for top10: 11.600919008255005 
+Total execution time: 1537.7323112487793
+
+Problem 2F multiprocessing pool 2 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 1.2557213306427002 
+Time for file_counts: 893.2762458324432 
+Time for global_counts: 205.97542071342468 
+Time for checksum: 2.6042375564575195 
+Time for top10: 11.774072408676147 
+Total execution time: 1115.1020483970642
+
+Problem 2F multiprocessing pool 4 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 4.462220668792725 
+Time for file_counts: 695.9026262760162 
+Time for global_counts: 272.4752571582794 
+Time for checksum: 3.6718101501464844 
+Time for top10: 11.7059485912323 
+Total execution time: 989.4231109619141
+
+Problem 2F multiprocessing pool 8 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 4.460111141204834 
+Time for file_counts: 565.8573415279388 
+Time for global_counts: 303.61161947250366 
+Time for checksum: 2.7444159984588623 
+Time for top10: 11.842576742172241 
+Total execution time: 889.7213332653046
+
+Problem 2F multiprocessing pool 16 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 0.3585684299468994 
+Time for file_counts: 546.9497377872467 
+Time for global_counts: 203.1981439590454 
+Time for checksum: 2.6886696815490723 
+Time for top10: 11.768345355987549 
+Total execution time: 764.9707522392273
+
+Problem 2F multiprocessing pool 32 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 0.3797616958618164 
+Time for file_counts: 372.4883713722229 
+Time for global_counts: 253.90731620788574 
+Time for checksum: 4.210749387741089 
+Time for top10: 12.017662763595581 
+Total execution time: 643.0081992149353
+
+Problem 2f multiprocessing pool 64 workers
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 0.9760837554931641 
+Time for file_counts: 117.29495906829834 
+Time for global_counts: 171.402019739151 
+Time for checksum: 2.631598949432373 
+Time for top10: 11.637715101242065 
+Total execution time: 303.9473385810852
