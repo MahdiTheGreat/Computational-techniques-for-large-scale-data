@@ -51,22 +51,30 @@ the queue, and end of input is indicated with a None
     
     Returns: None
     """
-    counts = dict()
-    files_processed = 0
-    while (files_processed < batch_size):
-        file = get_file(filename_queue.get())
-        if file is not None:
+    keep_counting = True
+
+    while keep_counting:
+        counts = dict()
+        files_processed = 0
+
+        while (files_processed < batch_size):
+            filename = filename_queue.get()
+            if filename is None: # End of input
+                keep_counting = False
+                break
+
+            file = get_file(filename)
             for word in file.split():
                 if word in counts:
                     counts[word] += 1
                 else:
                     counts[word] = 1
             files_processed += 1
-        else:
-            break
-    wordcount_queue.put(counts)
 
+        if files_processed > 0:
+            wordcount_queue.put(counts)
 
+    wordcount_queue.put(None)
 
 def get_top10(counts):
     """
@@ -109,14 +117,22 @@ Nones to signal end of input from a worker
     
     Return value: None
     """
-    wordcounts = wordcount_queue.get()
-    if wordcounts is not None:
-        for word in wordcounts.items():
-            if word in global_counts:
-                global_counts[word] += wordcounts[word]
-            else:
-                global_counts[word] = wordcounts[word]
-    out_queue.put(global_counts)
+    none_count = 0
+    global_counts = dict()
+    while none_count < num_workers:
+        wordcounts = wordcount_queue.get()
+        if wordcounts is None:
+            none_count += 1
+        else:
+            for word, value in wordcounts.items():
+                if word in global_counts:
+                    global_counts[word] += value
+                else:
+                    global_counts[word] = value
+    
+    out_queue.put(compute_checksum(global_counts))
+    out_queue.put(get_top10(global_counts))
+            
 
 
 def compute_checksum(counts):
@@ -138,6 +154,7 @@ def compute_checksum(counts):
 
 
 if __name__ == '__main__':
+    start = time.time()
     parser = argparse.ArgumentParser(description='Counts words of all the text files in the given directory')
     parser.add_argument('-w', '--num-workers', help = 'Number of workers', default=1, type=int)
     parser.add_argument('-b', '--batch-size', help = 'Batch size', default=1, type=int)
@@ -158,17 +175,19 @@ if __name__ == '__main__':
     if batch_size < 1:
         sys.stderr.write(f'{sys.argv[0]}: ERROR: Batch size must be positive (got{batch_size})!\n')
         quit(1)
-    
+
     # construct workers and queues
     filename_queue = mp.Queue()
     wordcount_queue = mp.Queue()
-    global_counts = dict()
+    out_queue = mp.Queue()
 
     workers = [mp.Process(target = count_words_in_file, args=(filename_queue, wordcount_queue, batch_size)) for _ in range(num_workers)]
 
     for w in workers:
         w.start()
     # construct a special merger process
+    merger = mp.Process(target= merge_counts, args= (out_queue, wordcount_queue, num_workers))
+    merger.start()
 
     # put filenames into the input queue
     for filename in get_filenames(path):
@@ -176,11 +195,18 @@ if __name__ == '__main__':
 
     for _ in range(num_workers):
         filename_queue.put(None)
-
-
     # workers then put dictionaries for the merger    
+
     for w in workers:
         w.join()
-
+        
 
     # the merger shall return the checksum and top 10 through the out queue
+    merger.join()
+    print("Checksum:", end=" ")
+    print(out_queue.get())
+    print("Top10:", end=" ")
+    print(out_queue.get())
+    end = time.time() - start
+    print("Execution time: ", end=" ")
+    print(end)

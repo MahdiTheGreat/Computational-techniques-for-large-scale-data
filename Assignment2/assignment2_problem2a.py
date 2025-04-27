@@ -155,4 +155,8 @@ if __name__ == '__main__':
  
     checksum = compute_checksum(global_counts)
     top10 = get_top10(global_counts)
+    print("Checksum:", end=" ")
+    print(checksum)
+    print("Top10:", end=" ")
+    print(top10)
 
