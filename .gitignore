@@ -172,3 +172,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Ignore output from clusters and the job scripts
+*.out
+*.sh

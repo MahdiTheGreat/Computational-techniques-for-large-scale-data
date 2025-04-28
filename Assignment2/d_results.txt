@@ -1,0 +1,9 @@
+Problem 2D
+Checksum: 14880058115 
+Top 10: [(148499457, 'the'), (89408738, 'of'), (72120653, 'and'), (61762640, 'to'), (51211506, 'a'), (44714455, 'in'), (24646774, 'that'), (24224366, 'was'), (19939759, 'is'), (19103566, 'I')] 
+Time for get_file: 42.815430641174316 
+Time for file_counts: 362.42595410346985 
+Time for global_counts: 222.42544221878052 
+Time for checksum: 3.5962095260620117 
+Time for top10: 11.919739723205566 
+Total execution time: 643.1877024173737
