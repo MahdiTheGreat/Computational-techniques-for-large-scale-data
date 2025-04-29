@@ -1,4 +1,4 @@
-from assignment3_problem1_skeleton import MRMineral
+from assignment3_problem1 import MRMineral
 import time
 import argparse
 
@@ -7,8 +7,8 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--num-workers', type=int, default=1)
     parser.add_argument('filename')
     args = parser.parse_args()
-    mr_job = MRLettercount(args=['-r', 'local', '--num-cores',
-                                 str(args.num_workers), '--ascii-only',
+    mr_job = MRMineral(args=['-r', 'local', '--num-cores',
+                                 str(args.num_workers),
                                  args.filename])
 
     start = time.time()
