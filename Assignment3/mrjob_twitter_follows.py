@@ -12,12 +12,15 @@ class MRJobTwitterFollows(MRJob):
     #
     # You will, of course, need to replace ??? with a suitable expression
 
+    # yield None since calculations are done on one node in the reducer
     def mapper(self, _, line):
-        user_id, follows = line.split(":")
+        user_id, follows = line.split(": ")
         if len(follows) > 0:
             yield (None, (user_id, len(follows.split(","))))
         else:
             yield (None, (user_id, 0))
+
+# No combiner needed, each line unique
 
     def reducer(self, _, users):
         max_user = (None, -1)
