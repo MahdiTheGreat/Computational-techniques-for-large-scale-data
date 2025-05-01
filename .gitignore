@@ -175,4 +175,3 @@ cython_debug/
 
 # Ignore output from clusters and the job scripts
 *.out
-*.sh
