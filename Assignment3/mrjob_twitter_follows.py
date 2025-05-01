@@ -16,14 +16,14 @@ class MRJobTwitterFollows(MRJob):
     def mapper(self, _, line):
         user_id, follows = line.split(": ")
         if len(follows) > 0:
-            yield (None, (user_id, len(follows.split(","))))
+            yield (None, (user_id, len(follows.split(" "))))
         else:
             yield (None, (user_id, 0))
 
 # No combiner needed, each line unique
 
     def reducer(self, _, users):
-        max_user = (None, -1)
+        max_user = [None, -1]
         num_users = 0
         num_zeroes = 0
         total_follows = 0
@@ -34,8 +34,8 @@ class MRJobTwitterFollows(MRJob):
                 num_zeroes += 1
             else:
                 if follows > max_user[1]:
-                    max_user = (user_id, follows)
-                total_follows += follows
+                    max_user = [user_id, follows]
+            total_follows += follows
 
         average = total_follows/num_users
         yield ('most followed id', max_user[0])
