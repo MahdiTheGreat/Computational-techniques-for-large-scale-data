@@ -20,8 +20,6 @@ class MRJobTwitterFollows(MRJob):
         else:
             yield (None, (user_id, 0))
 
-# No combiner needed, each line unique
-
     def reducer(self, _, users):
         max_user = [None, -1]
         num_users = 0
