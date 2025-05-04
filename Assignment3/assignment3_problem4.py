@@ -43,9 +43,9 @@ class MRJobTwitterFollowers(MRJob):
 
         average = total_followers / num_users
         yield ('most followers id', max_user[0])
-        yield ('most followers', max_user[1])
+        yield ('followers count', max_user[1])
         yield ('average followers', average)
-        yield ('count no followers', num_zeroes)
+        yield ('no followers count', num_zeroes)
 
     def steps(self):
         return [MRStep(mapper=self.mapper, combiner=self.combiner, reducer=self.reducer), 
