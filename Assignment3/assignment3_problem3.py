@@ -36,10 +36,10 @@ class MRJobTwitterFollows(MRJob):
             total_follows += follows
 
         average = total_follows/num_users
-        yield ('most followed id', max_user[0])
-        yield ('most followed', max_user[1])
-        yield ('average followed', average)
-        yield ('count follows no-one', num_zeroes)
+        yield ('most follows id', max_user[0])
+        yield ('follows count', max_user[1])
+        yield ('average follows', average)
+        yield ('follows no-one count', num_zeroes)
 
 
 if __name__ == '__main__':
