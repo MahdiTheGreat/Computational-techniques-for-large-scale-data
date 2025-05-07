@@ -7,9 +7,9 @@ findspark.init()
 from pyspark import SparkContext
 
 def parse_line(line):
-    user_id, follows = line.split(": ")
+    user_id, follows = line.split(":")
     if len(follows) > 0:
-        return (len(follows.split(" ")), user_id)
+        return (len(follows.split()), user_id)
     else:
         return (0, user_id)
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     lines = sc.textFile(args.filename)
 
     # fill in your code here
-    data = lines.map(parse_line)
+    data = lines.map(parse_line).cache()
 
     total_users = data.count()
     max_user = data.max()
