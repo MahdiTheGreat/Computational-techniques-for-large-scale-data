@@ -36,8 +36,16 @@ def jdn(dt):
 # key is the group key, df is a Pandas dataframe
 # should return a Pandas dataframe
 def lsq(key,df):
-    raise NotImplementedError
+    x_mean = df['JDN'].mean()
+    y_mean = df['AVG_T'].mean()
 
+    df['JDN'] = df['JDN'].apply(lambda x: x-x_mean)
+    df['AVG_T'] = df['AVG_T'].apply(lambda y: y-y_mean)
+    df['SUM'] = df['JDN'] * df['AVG_T']
+    df['x2'] = df['JDN']*df['JDN']
+    beta = df['SUM'].sum() / df['x2'].sum()
+
+    return pd.DataFrame({'STATION' : key, 'NAME' : df['NAME'].iloc[0],'BETA' : beta})
 
 if __name__ == '__main__':
     # do not change the interface
@@ -56,15 +64,24 @@ if __name__ == '__main__':
             .getOrCreate()
     
     # read the CSV file into a pyspark.sql dataframe and compute the things you need
+    df = spark.read.csv(args.filename,header=True,inferSchema=True)
+    df = df.withColumn('JDN', jdn(df.DATE))
 
-    raise NotImplementedError
+    df = df.withColumn('AVG_T', (df.TMIN+df.TMAX)/2)
+
+    linear_reg = df.select('STATION', 'NAME', 'JDN', 'AVG_T').groupBy('STATION')\
+        .applyInPandas(lsq, schema = 'STATION string, NAME string, BETA double')
+
+    #df.show()
+    linear_reg.show()
+
 
     # top 5 slopes are printed here
     # replace None with your dataframe, list, or an appropriate expression
     # replace STATIONCODE, STATIONNAME, and BETA with appropriate expressions
     print('Top 5 coefficients:')
-    for row in None:
-        print(f'{STATIONCODE} at {STATIONNAME} BETA={BETA:0.3e} °F/d')
+    for row in linear_reg.sort('BETA', ascending=False).limit(5).collect():
+        print(f'{row.STATION} at {row.NAME} BETA={row.BETA:0.3e} °F/d')
 
     # replace None with an appropriate expression
     print('Fraction of positive coefficients:')
