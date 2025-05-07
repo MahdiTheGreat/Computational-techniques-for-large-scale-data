@@ -6,6 +6,17 @@ import findspark
 findspark.init()
 from pyspark import SparkContext
 
+def line_parser(line):
+    user, follows = line.split(":")
+    users = [(user, 0)]
+    for u in follows.split():
+        users.append((u,1))
+
+    return users
+
+
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = \
                                     'Compute Twitter followers.')
@@ -20,16 +31,25 @@ if __name__ == '__main__':
     lines = sc.textFile(args.filename)
 
     # fill in your code here
-    raise NotImplementedError()
+    data = lines.flatMap(line_parser).reduceByKey(lambda x,y: x+y).cache()
+
+    total_users = data.count()
+
+    data = data.filter(lambda x: x[1]>0)
+    total_followers =  data.map(lambda x: x[1]).reduce(lambda a, b: a+b)
+    average = total_followers/total_users
+
+    no_followers = total_users - data.count()
+    max_user = data.max(key=lambda x:x[1])
     
     end = time.time()
     
     total_time = end - start
 
     # the first ??? should be the twitter id
-    print(f'max followers: ??? has ??? followers')
-    print(f'followers on average: ???')
-    print(f'number of user with no followers: ???')
-    print(f'num workers: ???')
-    print(f'total time: ???')
+    print(f'max followers: {max_user[0]} has {max_user[1]} followers')
+    print(f'followers on average: {average}')
+    print(f'number of user with no followers: {no_followers}')
+    print(f'num workers: {args.num_workers}')
+    print(f'total time: {total_time}')
 
