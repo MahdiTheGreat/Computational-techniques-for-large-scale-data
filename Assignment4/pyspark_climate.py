@@ -6,6 +6,7 @@ from pyspark.sql.types import IntegerType
 import pandas as pd
 import sys
 from pyspark.sql.types import DoubleType
+from pyspark.sql.functions import col, floor, avg
 
 @udf(returnType=IntegerType())
 def jdn(dt):
@@ -120,8 +121,18 @@ if __name__ == '__main__':
     #temp=df.select('STATION', 'NAME', 'DECADE', 'AVG_T')
     #spark.sql("SELECT STATION, NAME, DECADE, AVG_T from {tb} where DECADE==1910 OR DECADE==2010")
 
-    avg_t_decade = df.select('STATION', 'NAME', 'DECADE', 'AVG_T')
-    avg_t_decade = map(lambda row1, row2: if(row1.STATION == row2.STATION and row1.DECADE == row2.DECADE): row1.AVG_T + row2.AVG_T)
+    df.printSchema()
+    
+    # Add a conditional column (optional if you need it)
+#df_with_condition = df.select(
+#    'STATION', 
+#    'NAME', 
+#    'DECADE', 
+ #   'AVG_T',
+ #   when((col("DECADE") == 1910) | (col("DECADE") == 2010), col("DECADE")).alias("special_decade")
+#)
+    avg_t_decade = df.select('STATION', 'NAME', 'DECADE', 'AVG_T').groupBy('STATION', 'DECADE').agg(avg('AVG_T')).alias("DECADE_AVG_SUM")
+    avg_t_decade.show()
 
     print('Top 5 differences:')
     for row in None:
