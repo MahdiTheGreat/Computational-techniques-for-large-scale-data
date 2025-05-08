@@ -5,6 +5,7 @@ from pyspark.sql.functions import udf, col
 from pyspark.sql.types import IntegerType
 import pandas as pd
 import sys
+from pyspark.sql.types import DoubleType
 
 @udf(returnType=IntegerType())
 def jdn(dt):
@@ -29,8 +30,11 @@ def jdn(dt):
     f = int(30.6001*(m+1))
     jd = c+d+e+f-1524
     return jd
+   
+@udf(returnType=IntegerType())
+def decade(x):
+    return x.year//10*10
 
-    
 # you probably want to use a function with this signature for computing the
 # simple linear regression with least squares using applyInPandas()
 # key is the group key, df is a Pandas dataframe
@@ -67,14 +71,18 @@ if __name__ == '__main__':
     df = spark.read.csv(args.filename,header=True,inferSchema=True)
     df = df.withColumn('JDN', jdn(df.DATE))
 
+    df = df.withColumn('DECADE', decade(df.DATE))
+
     df = df.withColumn('AVG_T', (df.TMIN+df.TMAX)/2)
 
     linear_reg = df.select('STATION', 'NAME', 'JDN', 'AVG_T').groupBy('STATION')\
         .applyInPandas(lsq, schema = 'STATION string, NAME string, BETA double')
-
-    #df.show()
-    linear_reg.show()
-
+    
+    # Ensure BETA is consistently double
+    #linear_reg = linear_reg.withColumn("BETA", col("BETA").cast(DoubleType()))
+    
+    #print("linear reg is")
+    #linear_reg.show()
 
     # top 5 slopes are printed here
     # replace None with your dataframe, list, or an appropriate expression
@@ -84,12 +92,15 @@ if __name__ == '__main__':
         print(f'{row.STATION} at {row.NAME} BETA={row.BETA:0.3e} °F/d')
 
     # replace None with an appropriate expression
+    total_rows = linear_reg.count()
+    positive_betas = linear_reg[linear_reg['BETA'] > 0].count()
     print('Fraction of positive coefficients:')
-    print(None)
+    print(positive_betas/total_rows)
 
     # Five-number summary of slopes, replace with appropriate expressions
     print('Five-number summary of BETA values:')
-    beta_min, beta_q1, beta_median, beta_q3, beta_max = 5*[0.0]
+
+    beta_min, beta_q1, beta_median, beta_q3, beta_max= linear_reg.approxQuantile("BETA", [0.0,0.25, 0.5, 0.75,1.0], 0.01)
     print(f'beta_min {beta_min:0.3e}')
     print(f'beta_q1 {beta_q1:0.3e}')
     print(f'beta_median {beta_median:0.3e}')
@@ -106,6 +117,11 @@ if __name__ == '__main__':
 
     # Replace None with an appropriate expression
     # Replace STATION, STATIONNAME, and TAVGDIFF with appropriate expressions
+    #temp=df.select('STATION', 'NAME', 'DECADE', 'AVG_T')
+    #spark.sql("SELECT STATION, NAME, DECADE, AVG_T from {tb} where DECADE==1910 OR DECADE==2010")
+
+    avg_t_decade = df.select('STATION', 'NAME', 'DECADE', 'AVG_T')
+    avg_t_decade = map(lambda row1, row2: if(row1.STATION == row2.STATION and row1.DECADE == row2.DECADE): row1.AVG_T + row2.AVG_T)
 
     print('Top 5 differences:')
     for row in None:
