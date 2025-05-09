@@ -67,12 +67,14 @@ if __name__ == '__main__':
             .getOrCreate()
     
     # read the CSV file into a pyspark.sql dataframe and compute the things you need
-    df = spark.read.csv(args.filename,header=True,inferSchema=True).cache()
+    start = time.time()
+    df = spark.read.csv(args.filename,header=True,inferSchema=True)
+    reading_time = time.time() - start
     df = df.withColumn('JDN', jdn(df.DATE))
 
     df = df.withColumn('DECADE', decade(df.DATE))
 
-    df = df.withColumn('AVG_T', (df.TMIN+df.TMAX)/2)
+    df = df.withColumn('AVG_T', (df.TMIN+df.TMAX)/2).cache()
 
     linear_reg = df.select('STATION', 'NAME', 'JDN', 'AVG_T').groupBy('STATION')\
         .applyInPandas(lsq, schema = 'STATION string, NAME string, BETA double').cache()
@@ -110,7 +112,7 @@ if __name__ == '__main__':
 
     # Replace None with an appropriate expression
     # Replace STATION, STATIONNAME, and TAVGDIFF with appropriate expressions
-    avg_t_decades = df.filter((col('DECADE').isin(1910, 2010))).groupBy('STATION', 'NAME', 'DECADE').agg(avg('AVG_T').alias("DECADE_AVG")).cache()
+    avg_t_decades = df.filter((col('DECADE').isin(1910, 2010))).groupBy('STATION', 'NAME', 'DECADE').agg(avg('AVG_T').alias("DECADE_AVG"))
 
     temp_diff = (
         avg_t_decades.alias("a")
@@ -146,7 +148,11 @@ if __name__ == '__main__':
     print(f'tdiff_max {tdiff_max:0.1f} °C')
 
     # Add your time measurements here
+    end = time.time() - start
+    
     # It may be interesting to also record more fine-grained times (e.g., how 
     # much time was spent computing vs. reading data)
     print(f'num workers: {args.num_workers}')
-    print(f'total time: {None:0.1f} s')
+    print(f'total time: {end:0.1f} s')
+    print(f'read: {reading_time}')
+    print(f'computations: {end - reading_time}')
