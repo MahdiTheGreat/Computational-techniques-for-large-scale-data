@@ -1,12 +1,10 @@
 import time
 import argparse
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf, col
+from pyspark.sql.functions import udf, col, avg
 from pyspark.sql.types import IntegerType
 import pandas as pd
 import sys
-from pyspark.sql.types import DoubleType
-from pyspark.sql.functions import col, floor, avg
 
 @udf(returnType=IntegerType())
 def jdn(dt):
@@ -69,7 +67,7 @@ if __name__ == '__main__':
             .getOrCreate()
     
     # read the CSV file into a pyspark.sql dataframe and compute the things you need
-    df = spark.read.csv(args.filename,header=True,inferSchema=True)
+    df = spark.read.csv(args.filename,header=True,inferSchema=True).cache()
     df = df.withColumn('JDN', jdn(df.DATE))
 
     df = df.withColumn('DECADE', decade(df.DATE))
@@ -77,13 +75,7 @@ if __name__ == '__main__':
     df = df.withColumn('AVG_T', (df.TMIN+df.TMAX)/2)
 
     linear_reg = df.select('STATION', 'NAME', 'JDN', 'AVG_T').groupBy('STATION')\
-        .applyInPandas(lsq, schema = 'STATION string, NAME string, BETA double')
-    
-    # Ensure BETA is consistently double
-    #linear_reg = linear_reg.withColumn("BETA", col("BETA").cast(DoubleType()))
-    
-    #print("linear reg is")
-    #linear_reg.show()
+        .applyInPandas(lsq, schema = 'STATION string, NAME string, BETA double').cache()
 
     # top 5 slopes are printed here
     # replace None with your dataframe, list, or an appropriate expression
@@ -118,33 +110,35 @@ if __name__ == '__main__':
 
     # Replace None with an appropriate expression
     # Replace STATION, STATIONNAME, and TAVGDIFF with appropriate expressions
-    #temp=df.select('STATION', 'NAME', 'DECADE', 'AVG_T')
-    #spark.sql("SELECT STATION, NAME, DECADE, AVG_T from {tb} where DECADE==1910 OR DECADE==2010")
+    avg_t_decades = df.filter((col('DECADE').isin(1910, 2010))).groupBy('STATION', 'NAME', 'DECADE').agg(avg('AVG_T').alias("DECADE_AVG")).cache()
 
-    df.printSchema()
-    
-    # Add a conditional column (optional if you need it)
-#df_with_condition = df.select(
-#    'STATION', 
-#    'NAME', 
-#    'DECADE', 
- #   'AVG_T',
- #   when((col("DECADE") == 1910) | (col("DECADE") == 2010), col("DECADE")).alias("special_decade")
-#)
-    avg_t_decade = df.select('STATION', 'NAME', 'DECADE', 'AVG_T').groupBy('STATION', 'DECADE').agg(avg('AVG_T')).alias("DECADE_AVG_SUM")
-    avg_t_decade.show()
+    temp_diff = (
+        avg_t_decades.alias("a")
+        .join(avg_t_decades.alias("b"), on="STATION")
+        .filter((col("a.DECADE") == 1910) & (col("b.DECADE") == 2010))
+        .select(
+            col("a.STATION"),
+            col("a.NAME"),
+            col("a.DECADE_AVG").alias("TEMP_1910"),
+            col("b.DECADE_AVG").alias("TEMP_2010"),
+            ((col("b.DECADE_AVG")-32) * (5/9) - (col("a.DECADE_AVG")-32) * (5/9)).alias("TEMP_DIFF_C")
+        ).cache()
+    )
+    #temp_diff.show()    
 
     print('Top 5 differences:')
-    for row in None:
-        print(f'{STATION} at {STATIONNAME} difference {TAVGDIFF:0.1f} °C)')
+    for row in temp_diff.sort('TEMP_DIFF_C', ascending=False).limit(5).collect():
+        print(f'{row.STATION} at {row.NAME} difference {row.TEMP_DIFF_C:0.1f} °C)')
 
     # replace None with an appropriate expression
+    total_rows = temp_diff.count()
+    positive_rows = temp_diff.filter(col('TEMP_DIFF_C') > 0).count()
     print('Fraction of positive differences:')
-    print(None)
+    print(positive_rows / total_rows)
 
     # Five-number summary of temperature differences, replace with appropriate expressions
     print('Five-number summary of decade average difference values:')
-    tdiff_min, tdiff_q1, tdiff_median, tdiff_q3, tdiff_max = 5*[0.0]
+    tdiff_min, tdiff_q1, tdiff_median, tdiff_q3, tdiff_max = temp_diff.approxQuantile("TEMP_DIFF_C", [0.0,0.25, 0.5, 0.75,1.0], 0.01)
     print(f'tdiff_min {tdiff_min:0.1f} °C')
     print(f'tdiff_q1 {tdiff_q1:0.1f} °C')
     print(f'tdiff_median {tdiff_median:0.1f} °C')
