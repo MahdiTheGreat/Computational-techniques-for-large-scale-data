@@ -75,12 +75,7 @@ def dlog2(n):
 def rho(n):
     """Given a 32-bit number n, return the 1-based position of the first
     1-bit"""
-    if n == 0:
-        return 0
-    i = 0
-    while not(n & (1 << 31 - i)):
-        i += 1
-    return i + 1
+    return 32-n.bit_length() + 1
     
 
 def compute_jr(key,seed,log2m):
