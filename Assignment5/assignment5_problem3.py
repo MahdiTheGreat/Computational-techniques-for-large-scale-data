@@ -7,6 +7,7 @@ from pyspark import SparkContext, SparkConf
 import math
 import time
 import struct
+import random
 
 def rol32(x,k):
     """Auxiliary function (left rotation for 32-bit words)"""
@@ -173,15 +174,15 @@ if __name__ == '__main__':
     data = sc.parallelize(get_files(path))
     # Implement HyperLogLog here
 
+    # Split data into words
+    words = data.flatMap(lambda line: line.strip().split())
+
     # Initialise array to 0
     M = [0]*m
 
-    # Split data into words
-    data = data.flatMap(lambda line: line.strip().split())
     # Compute (j,r) for each word and reduce to only max values of r for each j
-    data = data.map(lambda key: compute_jr(key.encode('utf-8'), seed, log2m)).reduceByKey(lambda x,y: max(x,y))
-    
-    for j, r in data.collect():
+    jr = words.map(lambda key: compute_jr(key.encode('utf-8'), seed, log2m)).reduceByKey(lambda x,y: max(x,y)).collect()
+    for j, r in jr:
         M[j] = r
 
     # Compute harmonic mean and estimate cardinality
@@ -197,11 +198,9 @@ if __name__ == '__main__':
         E = n
     
     end = time.time()
-
     print(f'Cardinality estimate: {E:0.1f}')
     print(f'Number of workers: {num_workers}')
     print(f'Took {end-start} s')
-
     
     
 
