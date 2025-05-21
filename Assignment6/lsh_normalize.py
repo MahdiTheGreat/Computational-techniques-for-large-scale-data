@@ -28,9 +28,11 @@ def normalize(X):
     
     Implement this function using array operations! No loops allowed.
     """
-    raise NotImplementedError()
-    
+    print("X shape: ", X.shape)
+    print("X is: ", X)
+    return X/np.linalg.norm(X, axis=1, keepdims=True)
 
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset', help='Glove dataset filename',
@@ -41,6 +43,8 @@ if __name__ == '__main__':
     start = time.time()
 
     X = normalize(X)
+    print("Normalized X shape: ", X.shape)
+    print("Normalized X is: ", X)
 
     end = time.time()
 
