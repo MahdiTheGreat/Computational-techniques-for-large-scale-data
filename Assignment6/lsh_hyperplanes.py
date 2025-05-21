@@ -28,7 +28,7 @@ def normalize(X):
     
     Implement this function using array operations! No loops allowed.
     """
-    raise NotImplementedError()
+    return X/np.linalg.norm(X, axis=1, keepdims=True)
 
 def construct_queries(queries_fn, word_to_idx, X):
     """
@@ -66,14 +66,26 @@ class RandomHyperplanes:
         columns) of X
         """
         rng = np.random.default_rng(self._seed)
-        raise NotImplementedError()
+        self._hyperplanes = rng.normal(size=(self._D, X.shape[1]))
+        self._hyperplanes = normalize(self._hyperplanes)
+        print("Hyperplanes shape: ", self._hyperplanes.shape)
+        print("Hyperplanes is: ", self._hyperplanes)
 
     def transform(self, X):
         """
         Project the rows of X into binary vectors
         """
-        raise NotImplementedError()
-
+        if not hasattr(self, '_hyperplanes'):
+            raise ValueError("fit() must be called before transform()")
+        # Compute the dot product and apply the sign function
+        crossings=X @ self._hyperplanes.T
+        # print("Crossings shape: ", crossings.shape)
+        # print("Crossings is: ", crossings)
+        # Convert to binary values (0 and 1)
+        crossings = np.where(crossings > 0, 1, 0)
+        # Convert to int
+        return crossings.astype(int)
+        
     def fit_transform(self, X):
         """
         Calls fit() followed by transform()
@@ -94,6 +106,7 @@ if __name__ == '__main__':
 
 
     X = normalize(X)
+    print("Normalized X shape: ", X.shape)
 
     (Q,queries) = construct_queries(args.queries, word_to_idx, X)
 
@@ -102,6 +115,10 @@ if __name__ == '__main__':
     rh = RandomHyperplanes(args.D, 1234)
     X2 = rh.fit_transform(X)
     Q2 = rh.transform(Q)
+    print("X2 shape: ", X2.shape)
+    print("X2 is: ", X2)
+    print("Q2 shape: ", Q2.shape)
+    print("Q2 is: ", Q2)
 
     end = time.time()
 
