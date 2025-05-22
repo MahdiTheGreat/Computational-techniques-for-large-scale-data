@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from numpy import typing as npt
 import csv
 import argparse
 import time
@@ -29,7 +30,7 @@ def normalize(X):
     
     Implement this function using array operations! No loops allowed.
     """
-    raise NotImplementedError()
+    return X/np.linalg.norm(X, axis=1, keepdims=True)
 
 def construct_queries(queries_fn, word_to_idx, X):
     """
@@ -53,7 +54,7 @@ class RandomHyperplanes:
     - transform actually transforms the vectors
     - fit_transform does fit first, followed by transform
     """
-    def __init__(self, D, seed = None):
+    def __init__(self, D, seed = None)->None:
         """
         Sets the number of hyperplanes (D) and the optional random number seed
         """
@@ -67,14 +68,22 @@ class RandomHyperplanes:
         columns) of X
         """
         rng = np.random.default_rng(self._seed)
-        raise NotImplementedError()
+        self._hyperplanes = rng.normal(size=(self._D, X.shape[1]))
+        self._hyperplanes = normalize(self._hyperplanes)
 
     def transform(self, X):
         """
         Project the rows of X into binary vectors
         """
-        raise NotImplementedError()
-
+        if not hasattr(self, '_hyperplanes'):
+            raise ValueError("fit() must be called before transform()")
+        # Compute the dot product
+        crossings= X @ self._hyperplanes.T
+        # Convert to binary values (0 and 1)
+        crossings = np.where(crossings > 0, 1, 0)
+        # Convert to int
+        return crossings.astype(int)
+        
     def fit_transform(self, X):
         """
         Calls fit() followed by transform()
@@ -111,11 +120,13 @@ class LocalitySensitiveHashing:
         self._k = k
         self._L = L
         rng = np.random.default_rng(seed)
-        raise NotImplementedError()
         # draw the hash functions here
         # (essentially, draw a random matrix of shape L*k with values in
         # 0,1,...,D-1)
         # also initialize the random hyperplanes
+        self._hash_functions = rng.integers(low=0, high=D, size=(L,k))
+        self._random_hyperplanes = RandomHyperplanes(D, seed)
+        self._H = [dict() for _ in range(L)]
 
     def fit(self, X: npt.NDArray[np.float64])->None:
         """
@@ -124,8 +135,16 @@ class LocalitySensitiveHashing:
         Then hash the dataset L times into the L hash tables
         """
         self._X = X
-        raise NotImplementedError()
-
+        X = self._random_hyperplanes.fit_transform(X)
+        
+        for i in range(self._L):
+            table = self._H[i]
+            hash_function = self._hash_functions[i]
+            for j in range(X.shape[0]):
+                key = tuple(X[j, hash_function]) #reduce to hash function
+                if key not in table:
+                    table[key] = set()
+                table[key].add(j)
 
     def query(self, q: npt.NDArray[np.float64])->npt.NDArray[np.int64]:
         """
@@ -135,14 +154,29 @@ class LocalitySensitiveHashing:
         neighbor (if the vector was member of the dataset, then typically 
         this would be itself), X[I[1]] the second nearest etc.
         """
-        raise NotImplementedError()
 
         # Project the query into a binary vector
         # Then hash it L times
         # Collect all indices from the hash buckets
         # Then compute the dot products with those vectors
         # Finally sort results in *descending* order and return the indices
+        q_fitted = self._random_hyperplanes.transform(q)
 
+        I = set()
+        for i in range(self._L):
+            table = self._H[i]
+            hash_function = self._hash_functions[i]
+            key = tuple(q_fitted[hash_function])
+            if key in table:
+                I = I.union(table[key])
+
+        results=[]
+        for i in I:
+            results.append([np.dot(self._X[i], q), i])
+        results.sort(reverse=True)
+        return [result[1] for result in results]
+
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', help='Random hyperplanes dimension', type=int,
