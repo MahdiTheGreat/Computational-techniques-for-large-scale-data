@@ -77,8 +77,10 @@ class RandomHyperplanes:
         """
         if not hasattr(self, '_hyperplanes'):
             raise ValueError("fit() must be called before transform()")
+
         # Compute the dot product
         crossings= X @ self._hyperplanes.T
+
         # Convert to binary values (0 and 1)
         crossings = np.where(crossings > 0, 1, 0)
         # Convert to int
@@ -90,6 +92,7 @@ class RandomHyperplanes:
         """
         self.fit(X)
         return self.transform(X)
+
 
 class LocalitySensitiveHashing:
     """
@@ -124,10 +127,13 @@ class LocalitySensitiveHashing:
         # (essentially, draw a random matrix of shape L*k with values in
         # 0,1,...,D-1)
         # also initialize the random hyperplanes
+
         self._hash_functions = rng.integers(low=0, high=D, size=(L,k))
         self._random_hyperplanes = RandomHyperplanes(D, seed)
         self._H = [dict() for _ in range(L)]
 
+
+    
     def fit(self, X: npt.NDArray[np.float64])->None:
         """
         Fit random hyperplanes
@@ -135,6 +141,7 @@ class LocalitySensitiveHashing:
         Then hash the dataset L times into the L hash tables
         """
         self._X = X
+
         X = self._random_hyperplanes.fit_transform(X)
         
         for i in range(self._L):
@@ -154,9 +161,7 @@ class LocalitySensitiveHashing:
         neighbor (if the vector was member of the dataset, then typically 
         this would be itself), X[I[1]] the second nearest etc.
         """
-
-        # Project the query into a binary vector
-        # Then hash it L times
+        
         # Collect all indices from the hash buckets
         # Then compute the dot products with those vectors
         # Finally sort results in *descending* order and return the indices
