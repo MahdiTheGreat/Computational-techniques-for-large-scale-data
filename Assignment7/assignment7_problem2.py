@@ -15,15 +15,28 @@ def linear_scan(X, Q, b = None):
     Returns an m-vector of indices I; the value i reports the row in X such 
     that the Euclidean norm of ||X[I[i],:]-Q[i]|| is minimal
     """
-    I = np.zeros(Q.shape[0], dtype=np.int64)
+    # Move data to GPU)
+    I = cp.zeros(Q.shape[0], dtype=cp.int64)
+    start = time.time()
+    X_gpu = cp.asarray(X, blocking = True)
+    end_transfer = time.time() - start
+    print(f'To device: {end_transfer}s')
     if b is None:
-        distances = np.linalg.norm(Q[:, np.newaxis] - X, axis=2)
-        I = np.argmin(distances, axis=1)
+        Q_gpu = cp.asarray(Q, blocking = True)
+        distances = cp.linalg.norm(Q_gpu[:, cp.newaxis] - X_gpu, axis=2)
+        I = cp.argmin(distances, axis=1)
     else:
         for i in range(0, Q.shape[0], b):
-            distances = np.linalg.norm(Q[i:i+b, np.newaxis] - X, axis=2)
-            I[i:i+b] = np.argmin(distances, axis=1)
-    return I
+            Q_gpu = cp.asarray(Q[i:i+b], blocking = True)
+            distances = cp.linalg.norm(Q_gpu[:, cp.newaxis] - X_gpu, axis=2)
+            I[i:i+b] = cp.argmin(distances, axis=1)
+
+    cp.cuda.Stream.null.synchronize()
+    start = time.time()
+    I_device = cp.asnumpy(I)
+    end_transfer = time.time() - start
+    print(f'From device: {end_transfer}s')
+    return I_device
 
 def load_glove(fn):
     """
@@ -114,6 +127,7 @@ if __name__ == '__main__':
     t6 = time.time()
 
     I = linear_scan(X,Q,args.batch_size)
+
     t7 = time.time()
     assert I.shape == (m,)
 
