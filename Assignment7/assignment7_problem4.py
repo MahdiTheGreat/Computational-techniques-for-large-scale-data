@@ -1,4 +1,5 @@
 import numpy as np
+import cupy as cp
 import argparse
 import pandas as pd
 import csv
@@ -10,19 +11,14 @@ def efficient_norm(Q, X):
     Computes the squared Euclidean distance between each row of Q and each row of X.
     Returns an m*n matrix where the (i,j) entry is ||X[j,:] - Q[i,:]||^2.
     """
-    print("X shape:", X.shape)
-    print("Q shape:", Q.shape)
-    Q=np.squeeze(Q, axis=1)  # Ensure Q is 2D
-    print("Q shape after squeeze:", Q.shape)
-    X_norms = np.sum(X**2, axis=1).reshape(-1, 1) 
-    Q_norms = np.sum(Q**2, axis=1).reshape(1, -1) 
-    print("X norms shape:", X_norms.shape)
-    print("Q norms shape:", Q_norms.shape)
-    dot = X @ Q.T # Shape: (3, 2)
-    print("Dot product shape:", dot.shape)
-    D=X_norms + Q_norms - 2 * dot  # Broadcasting gives shape: (3, 2)
-    print("D shape:", D.shape)
-    return D.T
+
+    X_norms = cp.sum(X**2, axis=1).reshape(-1, 1) 
+    Q_norms = cp.sum(Q**2, axis=1).reshape(1, -1) 
+    
+    dot = X @ Q.T 
+    D = X_norms + Q_norms - 2 * dot 
+
+    return D
 
 def linear_scan(X, Q, b = None):
     """
@@ -33,15 +29,26 @@ def linear_scan(X, Q, b = None):
     Returns an m-vector of indices I; the value i reports the row in X such 
     that the Euclidean norm of ||X[I[i],:]-Q[i]|| is minimal
     """
-    I = np.zeros(Q.shape[0], dtype=np.int64)
+    I = cp.zeros(Q.shape[0], dtype=cp.int64)
+
+    X_gpu = cp.asarray(X, blocking=True)
+
     if b is None:
-        distances = efficient_norm(Q[:, np.newaxis] , X)
-        I = np.argmin(distances, axis=1)
+        Q_gpu = cp.asarray(Q, blocking=True)
+        distances = efficient_norm(Q_gpu, X_gpu)
+        I = cp.argmin(distances, axis=0)
     else:
         for i in range(0, Q.shape[0], b):
-            distances = efficient_norm(Q[i:i+b, np.newaxis] ,X)
-            I[i:i+b] = np.argmin(distances, axis=1)
-    return I
+            Q_gpu_batch = cp.asarray(Q[i:i+b], blocking=True)
+            distances = efficient_norm(Q_gpu_batch, X_gpu)
+            if i+b > Q.shape[0]:
+                I[i:]  = cp.argmin(distances, axis=0)
+            else:
+                I[i:i+b] = cp.argmin(distances, axis=0)
+
+    cp.cuda.Stream.null.synchronize()
+    I_cpu = cp.asnumpy(I)
+    return I_cpu
 
 def load_glove(fn):
     """
