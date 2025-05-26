@@ -10,19 +10,14 @@ def efficient_norm(Q, X):
     Computes the squared Euclidean distance between each row of Q and each row of X.
     Returns an m*n matrix where the (i,j) entry is ||X[j,:] - Q[i,:]||^2.
     """
-    print("X shape:", X.shape)
-    print("Q shape:", Q.shape)
-    Q=np.squeeze(Q, axis=1)  # Ensure Q is 2D
-    print("Q shape after squeeze:", Q.shape)
+
     X_norms = np.sum(X**2, axis=1).reshape(-1, 1) 
     Q_norms = np.sum(Q**2, axis=1).reshape(1, -1) 
-    print("X norms shape:", X_norms.shape)
-    print("Q norms shape:", Q_norms.shape)
-    dot = X @ Q.T # Shape: (3, 2)
-    print("Dot product shape:", dot.shape)
-    D=X_norms + Q_norms - 2 * dot  # Broadcasting gives shape: (3, 2)
-    print("D shape:", D.shape)
-    return D.T
+    
+    dot = X @ Q.T 
+    D = X_norms + Q_norms - 2 * dot 
+
+    return D
 
 def linear_scan(X, Q, b = None):
     """
@@ -35,12 +30,12 @@ def linear_scan(X, Q, b = None):
     """
     I = np.zeros(Q.shape[0], dtype=np.int64)
     if b is None:
-        distances = efficient_norm(Q[:, np.newaxis] , X)
-        I = np.argmin(distances, axis=1)
+        distances = efficient_norm(Q , X)
+        I = np.argmin(distances, axis=0)
     else:
         for i in range(0, Q.shape[0], b):
-            distances = efficient_norm(Q[i:i+b, np.newaxis] ,X)
-            I[i:i+b] = np.argmin(distances, axis=1)
+            distances = efficient_norm(Q[i:i+b] ,X)
+            I[i:i+b] = np.argmin(distances, axis=0)
     return I
 
 def load_glove(fn):
