@@ -1,6 +1,6 @@
 import numpy as np
 import cupy as cp
-from cuvs.neighbor import brute_force
+from cuvs.neighbors import brute_force
 import argparse
 import pandas as pd
 import csv
