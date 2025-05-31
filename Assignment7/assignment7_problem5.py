@@ -97,12 +97,10 @@ if __name__ == '__main__':
 
     x_gpu = cp.asarray(X)
     q_gpu = cp.asarray(Q)
-    index = brute_force.build(x_gpu)
-    distances, neighbors = index.search(q_gpu, k=1)
-    print(distances)
-    print(neighbors)
-    I = cp.asnumpy(neighbors)
-    
+    index = brute_force.build(x_gpu, metric='sqeuclidean') #default sqeuclidean metric
+    distances, neighbors = brute_force.search(index, q_gpu, k=1)
+    I = cp.asnumpy(neighbors).squeeze()
+
     t7 = time.time()
     assert I.shape == (m,)
 
