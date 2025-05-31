@@ -16,7 +16,7 @@ def linear_scan(X, Q, b = None):
     that the Euclidean norm of ||X[I[i],:]-Q[i]|| is minimal
     """
     # Move data to GPU)
-    I = cp.zeros(Q.shape[0], dtype=cp.int64)
+    I = cp.empty(Q.shape[0], dtype=cp.int64)
     start = time.time()
     X_gpu = cp.asarray(X, blocking = True)
     end_transfer = time.time() - start
@@ -33,7 +33,7 @@ def linear_scan(X, Q, b = None):
 
     cp.cuda.Stream.null.synchronize()
     start = time.time()
-    I_device = cp.asnumpy(I)
+    I_device = cp.asnumpy(I, blocking = True)
     end_transfer = time.time() - start
     print(f'From device: {end_transfer}s')
     return I_device
